@@ -4,9 +4,7 @@ services:
   kerberos_server:
     image: omvk97/kerberos
     container_name: kerberos
-    ports:
-      - 88:88 # The ports the kdc server listens on
-      - 3000:3000 # The API port to create and read keytabs
+    network_mode: "host"
     environment:
       KERBEROS_ADMIN_PW: password
       KERBEROS_HOST_DNS: localhost
