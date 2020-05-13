@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System;
 using Microsoft.AspNetCore.Mvc;
 using app_api.V1.Repos.UserRepo;
@@ -38,7 +39,7 @@ namespace app_api.V1.Controllers
                 return BadRequest(new GenericReturnMessageDTO { StatusCode = 400, Message = ErrorMessages.UserAlreadyExists });
 
             // Create users principal and keytab
-            $"create-user.sh {input.NewUserUsername}".Bash();
+            $"create-user.sh {Regex.Escape(input.NewUserUsername)}".Bash();
 
             var newUserKeyTabFilePath = $"/keytabs/{input.NewUserUsername}.user.keytab";
 
@@ -78,7 +79,7 @@ namespace app_api.V1.Controllers
                 return BadRequest(new GenericReturnMessageDTO { StatusCode = 400, Message = ErrorMessages.ServiceAlreadyExists });
 
             // Create service principal and keytab
-            $"create-service.sh {input.NewServiceName} {input.NewServiceHost}".Bash();
+            $"create-service.sh {Regex.Escape(input.NewServiceName)} {Regex.Escape(input.NewServiceHost)}".Bash();
 
             var newUserKeyTabFilePath = $"/keytabs/{input.NewServiceName}.service.keytab";
 
