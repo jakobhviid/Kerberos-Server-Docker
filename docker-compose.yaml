@@ -5,6 +5,7 @@ services:
     image: omvk97/kerberos
     container_name: kerberos
     network_mode: "host"
+    restart: always
     environment:
       KERBEROS_ADMIN_PW: password
       KERBEROS_HOST_DNS: localhost
