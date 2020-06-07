@@ -21,7 +21,7 @@ services:
       KERBEROS_HOST_DNS: <<host_dns>>
       KERBEROS_REALM: CFEI.SECURE
       KERBEROS_API_PORT: 3000
-      KERBEROS_MSSQL_CONNECTION_STRING: "Server=<<mssql_ip_address>>;Database=<<database_name>;User Id=<<database_user>>;Password=<<database_password>>;"
+      KERBEROS_MSSQL_CONNECTION_STRING: "Server=<<mssql_ip_address>>;Database=<<database_name>;User Id=<<database_user>>; Password=<<database_password>>;"
 ```
 
 ## API Endpoints
