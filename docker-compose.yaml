@@ -2,9 +2,10 @@ version: "3"
 
 services:
   kerberos_server:
-    image: omvk97/kerberos
+    image: cfei/kerberos
     container_name: kerberos
-    network_mode: "host"
+    ports: 
+      - 3000:3000
     restart: always
     environment:
       KERBEROS_ADMIN_PW: password

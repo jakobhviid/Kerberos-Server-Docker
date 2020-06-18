@@ -1,15 +1,15 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using System;
+using app_api.Data;
+using app_api.V1.Repos.UserRepo;
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using app_api.Data;
-using app_api.V1.Repos.UserRepo;
-using Microsoft.EntityFrameworkCore;
-using AutoMapper;
 
 namespace app_api
 {
@@ -25,6 +25,14 @@ namespace app_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    // Any origin is allowed
+                    builder.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed((host) => true).AllowCredentials();
+                });
+            });
             services.AddControllers();
 
             // adding Database
@@ -48,8 +56,6 @@ namespace app_api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public async void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // TODO
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             UpdateDatabase(app);
             if (env.IsDevelopment())
             {
@@ -57,6 +63,7 @@ namespace app_api
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors();
             app.UseRouting();
 
             app.UseAuthorization();
@@ -71,11 +78,11 @@ namespace app_api
         }
         private static void UpdateDatabase(IApplicationBuilder app)
         {
-            using (var serviceScope = app.ApplicationServices
+            using(var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope())
             {
-                using (var context = serviceScope.ServiceProvider.GetService<DataContext>())
+                using(var context = serviceScope.ServiceProvider.GetService<DataContext>())
                 {
                     context.Database.Migrate();
                 }
@@ -87,11 +94,11 @@ namespace app_api
         // ensure that the kerberos database contains all the same users the user database contains
         private async static Task ExistingPrincipalsDatabaseCheck(IApplicationBuilder app)
         {
-            using (var serviceScope = app.ApplicationServices
+            using(var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope())
             {
-                using (var context = serviceScope.ServiceProvider.GetService<DataContext>())
+                using(var context = serviceScope.ServiceProvider.GetService<DataContext>())
                 {
                     var users = await context.Users.ToListAsync();
                     foreach (var user in users)
@@ -105,7 +112,7 @@ namespace app_api
                             var newUserKeyTabFilePath = $"/keytabs/{serviceName}.service.keytab";
                             user.KeyTabFile = File.ReadAllBytes(newUserKeyTabFilePath);
                         }
-                        else 
+                        else
                         {
                             $"create-user.sh {user.Username}".Bash();
                             var newUserKeyTabFilePath = $"/keytabs/{user.Username}.user.keytab";

@@ -1,14 +1,14 @@
-using System.Text.RegularExpressions;
 using System;
-using Microsoft.AspNetCore.Mvc;
-using app_api.V1.Repos.UserRepo;
-using app_api.V1.DTO.InputDTOs.UserDTOs;
-using Microsoft.AspNetCore.Http;
-using app_api.V1.Contracts;
-using app_api.Data.Models;
-using app_api.V1.DTO.OutputDTOs;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using app_api.Data.Models;
+using app_api.V1.Contracts;
+using app_api.V1.DTO.InputDTOs.UserDTOs;
+using app_api.V1.DTO.OutputDTOs;
+using app_api.V1.Repos.UserRepo;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
 namespace app_api.V1.Controllers
@@ -32,11 +32,11 @@ namespace app_api.V1.Controllers
         {
             // Check that admin password is correct to the one supplied in environment files
             if (!ValidAdmin(input.AdminPassword))
-                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { StatusCode = 403, Message = ErrorMessages.AdminPasswordInCorrect });
+                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.AdminPasswordInCorrect });
 
             // Check that the username is not already in use in another keytab
             if (await _repo.UserExists(input.NewUserUsername))
-                return BadRequest(new GenericReturnMessageDTO { StatusCode = 400, Message = ErrorMessages.UserAlreadyExists });
+                return BadRequest(new GenericReturnMessageDTO { Status = 400, Message = ErrorMessages.UserAlreadyExists });
 
             // Create users principal and keytab
             $"create-user.sh {Regex.Escape(input.NewUserUsername)}".Bash();
@@ -47,23 +47,26 @@ namespace app_api.V1.Controllers
 
             return StatusCode(StatusCodes.Status201Created, new GenericReturnMessageDTO
             {
-                StatusCode = 201,
-                Message = SuccessMessages.UserCreated
+                Status = 201,
+                    Message = SuccessMessages.UserCreated
             });
         }
 
-        [HttpGet(ApiRoutes.UserRoutes.GetKeyTab)]
+        [HttpPost(ApiRoutes.UserRoutes.GetKeyTab)]
         public async Task<ActionResult> GetKeyTab(GetUserKeyTabDTO input)
         {
-            if (input.Host != null) {
+            if (input.Host != null)
+            {
                 input.Username = input.Username + "/" + input.Host;
             }
             Console.WriteLine(input.Username);
             var keyTab = await _repo.GetUserKeyTab(input.Username, input.Password);
             if (keyTab == null)
-                return BadRequest(new GenericReturnMessageDTO { StatusCode = 400, Message = ErrorMessages.UserDoesNotExist });
-
-            return File(keyTab, "application/octet-stream");
+                return BadRequest(new GenericReturnMessageDTO { Status = 400, Message = ErrorMessages.UserDoesNotExist });
+            return new FileContentResult(keyTab, "application/octet-stream")
+            {
+                FileDownloadName = input.Username + ".keytab"
+            };
         }
 
         [HttpPost(ApiRoutes.UserRoutes.RegisterService)]
@@ -71,12 +74,12 @@ namespace app_api.V1.Controllers
         {
             // Check that admin password is correct to the one supplied in environment files
             if (!ValidAdmin(input.AdminPassword))
-                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { StatusCode = 403, Message = ErrorMessages.AdminPasswordInCorrect });
+                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.AdminPasswordInCorrect });
 
             var userNameWithHost = input.NewServiceName + "/" + input.NewServiceHost;
             // Check that the username is not already in use in another keytab
             if (await _repo.UserExists(userNameWithHost))
-                return BadRequest(new GenericReturnMessageDTO { StatusCode = 400, Message = ErrorMessages.ServiceAlreadyExists });
+                return BadRequest(new GenericReturnMessageDTO { Status = 400, Message = ErrorMessages.ServiceAlreadyExists });
 
             // Create service principal and keytab
             $"create-service.sh {Regex.Escape(input.NewServiceName)} {Regex.Escape(input.NewServiceHost)}".Bash();
@@ -87,8 +90,8 @@ namespace app_api.V1.Controllers
 
             return StatusCode(StatusCodes.Status201Created, new GenericReturnMessageDTO
             {
-                StatusCode = 201,
-                Message = SuccessMessages.ServiceCreated
+                Status = 201,
+                    Message = SuccessMessages.ServiceCreated
             });
         }
 
@@ -96,7 +99,6 @@ namespace app_api.V1.Controllers
         {
             return adminPassword.Equals(_configuration["KERBEROS_ADMIN_PW"]);
         }
-
 
     }
 }
