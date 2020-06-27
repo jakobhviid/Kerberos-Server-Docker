@@ -13,7 +13,6 @@ namespace app_api.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Username = table.Column<string>(nullable: false),
-                    Email = table.Column<string>(nullable: false),
                     PasswordHash = table.Column<byte[]>(nullable: false),
                     PasswordSalt = table.Column<byte[]>(nullable: false),
                     KeyTabFile = table.Column<byte[]>(nullable: false),

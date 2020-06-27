@@ -2,14 +2,13 @@ version: "3"
 
 services:
   kerberos_server:
-    image: cfei/kerberos
+    image: omvk97/kerberos
     container_name: kerberos
-    ports: 
-      - 3000:3000
+    network_mode: host
     restart: always
     environment:
       KERBEROS_ADMIN_PW: password
-      KERBEROS_HOST_DNS: localhost
-      KERBEROS_REALM: KAFKA.SECURE
+      KERBEROS_HOST_DNS: 64.225.77.236
+      KERBEROS_REALM: CFEI.SECURE
       KERBEROS_API_PORT: 3000
-      KERBEROS_MSSQL_CONNECTION_STRING: "Server=172.19.0.1;Database=master;User Id=sa;Password=Database_password1;"
+      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=161.35.145.151;Port=5432;Database=test;Username=admin;Password=Database_password1"

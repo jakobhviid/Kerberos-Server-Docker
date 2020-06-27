@@ -15,8 +15,8 @@ if [ -z "$KERBEROS_REALM" ]; then
     exit 1
 fi
 
-if [ -z "$KERBEROS_MSSQL_CONNECTION_STRING" ]; then
-    echo -e "\e[1;32mERROR - Missing 'KERBEROS_MSSQL_CONNECTION_STRING' \e[0m"
+if [ -z "$KERBEROS_POSTGRES_CONNECTION_STRING" ]; then
+    echo -e "\e[1;32mERROR - Missing 'KERBEROS_POSTGRES_CONNECTION_STRING' \e[0m"
     exit 1
 fi
 

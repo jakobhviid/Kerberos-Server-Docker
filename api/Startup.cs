@@ -36,8 +36,8 @@ namespace app_api
             services.AddControllers();
 
             // adding Database
-            var connectionString = Configuration["KERBEROS_MSSQL_CONNECTION_STRING"];
-            services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+            var connectionString = Configuration["KERBEROS_POSTGRES_CONNECTION_STRING"];
+            services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
             services.AddScoped<IUserRepo, UserRepo>();
 
             // Auto Mapper Configurations
