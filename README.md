@@ -5,7 +5,7 @@ The server works by having one admin user who is able to create other users/serv
 
 # How to use
 This docker-compose file show the deployment of the container
-As can be seed 'network_mode' has been set to "host". This is required for the kerberos server to function properly. This is a mode which only works on linux machines
+As can be seen 'network_mode' has been set to "host". This is required for the kerberos server to function properly. This is a mode which only works on linux machines
 
 ```
 version: "3"
@@ -21,7 +21,7 @@ services:
       KERBEROS_HOST_DNS: <<host_dns>>
       KERBEROS_REALM: CFEI.SECURE
       KERBEROS_API_PORT: 3000
-      KERBEROS_MSSQL_CONNECTION_STRING: "Server=<<mssql_ip_address>>;Database=<<database_name>;User Id=<<database_user>>; Password=<<database_password>>;"
+      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=<<postgres_ip>>;Port=5432;Database=<<database_name>;Username=<<database_user>>;Password=<<database_password>>;"
 ```
 
 ## API Endpoints
@@ -44,8 +44,8 @@ This endpoint creates a user. The admin password provided during the container s
 }
 ```
 ##### Returns one of the following
-- 403: Admin Password incorrect
-- 400: User Already exists with a keytab
+- 403: Admin password incorrect
+- 400: User already exists with a keytab
 - 201: User successfully created
 
 ### example.com:3000/create-new-service
@@ -97,7 +97,7 @@ A user and service uses this endpoint to fetch their keytab. The password they w
 
 - `KERBEROS_API_PORT`: The port on which the API will listen for connections.
 
-- `KERBEROS_MSSQL_CONNECTION_STRING`: The connection string for a mssql database. This database is crucial in order to save and store all principals and users in case the container restarts.
+- `KERBEROS_POSTGRES_CONNECTION_STRING`: The connection string for a postgres database. This database is crucial in order to save and store all principals and users in case the container restarts.
 
 # Volumes
 
