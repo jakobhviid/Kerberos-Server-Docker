@@ -20,7 +20,7 @@ services:
       KERBEROS_ADMIN_PW: password
       KERBEROS_HOST_DNS: <<host_dns>>
       KERBEROS_REALM: CFEI.SECURE
-      KERBEROS_API_PORT: 3000
+      KERBEROS_API_PORT: 6000
       KERBEROS_POSTGRES_CONNECTION_STRING: "Host=<<postgres_ip>>;Port=5432;Database=<<database_name>;Username=<<database_user>>;Password=<<database_password>>;"
 ```
 
@@ -29,11 +29,11 @@ services:
 A 'user' is a keytab without a host specified. 
 A 'service' is a keytab with a host specified! That is the only difference. So if you require a keytab with a specific host (mostly used for programs such as kafka and zookeeper) create a 'service'. Whereas if you require a keytab without a host specified (mostly used for humans interacting with kerberos) create a 'user'
 
-In the following examples the host is example.com and the port is 3000.
+In the following examples the host is example.com and the port is 6000.
 
 **Note** The kerberos API is versioned. So all statuscodes and responses will stay exactly the same for the version that you use.
 
-### example.com:3000/create-new-user
+### example.com:6000/create-new-user
 This endpoint creates a user. The admin password provided during the container setup is required here.
 ##### Example Request (JSON)
 ```
@@ -48,7 +48,7 @@ This endpoint creates a user. The admin password provided during the container s
 - 400: User already exists with a keytab
 - 201: User successfully created
 
-### example.com:3000/create-new-service
+### example.com:6000/create-new-service
 This endpoint creates a service, so a host is required. The admin password provided during the container setup is required here.
 ##### Example Request (JSON)
 ```
@@ -64,7 +64,7 @@ This endpoint creates a service, so a host is required. The admin password provi
 - 400: Service already exists with a keytab
 - 201: Service successfully created
 
-### example.com:3000/get-keytab
+### example.com:6000/get-keytab
 A user and service uses this endpoint to fetch their keytab. The password they were created with is therefor needed here.
 ##### Example Request (JSON)
 **For a user**:

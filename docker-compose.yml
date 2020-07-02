@@ -10,5 +10,5 @@ services:
       KERBEROS_ADMIN_PW: password
       KERBEROS_HOST_DNS: 64.225.77.236
       KERBEROS_REALM: CFEI.SECURE
-      KERBEROS_API_PORT: 3000
+      KERBEROS_API_PORT: 6000
       KERBEROS_POSTGRES_CONNECTION_STRING: "Host=161.35.145.151;Port=5432;Database=test;Username=admin;Password=Database_password1"
