@@ -4,7 +4,7 @@ services:
   dev_database:
     image: postgres
     ports:
-      - "5432:5432"
+      - 5432:5432
     restart: always
     environment:
       POSTGRES_USER: admin

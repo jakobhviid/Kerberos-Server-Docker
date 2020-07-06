@@ -1,14 +1,27 @@
 version: "3"
 
 services:
-  kerberos_server:
-    image: omvk97/kerberos
-    container_name: kerberos
-    network_mode: host
+  kerberos-database:
+    image: postgres
+    container_name: kerberos-database
     restart: always
     environment:
-      KERBEROS_ADMIN_PW: password
+      POSTGRES_USER: kerberos
+      POSTGRES_PASSWORD: Kerberos_database_password1
+      POSTGRES_DB: kerberos_db
+
+  kerberos:
+    image: omvk97/kerberos
+    container_name: kerberos
+    ports:
+      - 80:80
+    environment:
+      KERBEROS_API_KEY: password
       KERBEROS_HOST_DNS: 64.225.77.236
       KERBEROS_REALM: CFEI.SECURE
       KERBEROS_API_PORT: 6000
-      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=161.35.145.151;Port=5432;Database=test;Username=admin;Password=Database_password1"
+      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=kerberos-database;Port=5432;Database=kerberos_db;Username=kerberos;Password=Kerberos_database_password1"
+      KERBEROS_INIT_USERS: "Username=zookeeper;Password=testPassword123;Host=127.0.0.1,Username=kafka;Password=whatIsGoingOn1;Host=127.0.0.1,Username=oliver;Password=testPassword1"
+    depends_on: 
+      - kerberos-database
+      

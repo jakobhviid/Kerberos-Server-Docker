@@ -1,7 +1,7 @@
 # About
 A kerberos server API. Useful in IoT and microservices which require kerberos authentication. The container can also be used in container orchestration environments, because it uses a database and will reconstruct every kerberos principal/keytab (user) if it is restarted.
 
-The server works by having one admin user who is able to create other users/services. The users/services will then get a password from the admin and is able to request their kerberos keytab as many times as they want.
+The server works by having one api key which has access to create users and services.
 
 # How to use
 This docker-compose file show the deployment of the container
@@ -17,12 +17,30 @@ services:
     network_mode: "host"
     restart: always
     environment:
-      KERBEROS_ADMIN_PW: password
+      KERBEROS_API_KEY: password
       KERBEROS_HOST_DNS: <<host_dns>>
       KERBEROS_REALM: CFEI.SECURE
       KERBEROS_API_PORT: 6000
       KERBEROS_POSTGRES_CONNECTION_STRING: "Host=<<postgres_ip>>;Port=5432;Database=<<database_name>;Username=<<database_user>>;Password=<<database_password>>;"
 ```
+
+# Configuration
+
+#### Required environment variables
+
+- `KERBEROS_API_KEY`: The api key to use. With this key you can create users and services, so store it safely!
+
+- `KERBEROS_HOST_DNS`: The DNS-resolvable hostname to use which the kerberos server is identified by. It should be set to the FQDN of the server on which kerberos is running on.
+
+- `KERBEROS_REALM`: The kerberos realm which will be used in keytabs and principals.
+
+- `KERBEROS_POSTGRES_CONNECTION_STRING`: The connection string for a postgres database. This database is crucial in order to save and store all principals and users in case the container restarts.
+
+#### Optional environment variables
+
+- `KERBEROS_API_PORT`: The port on which the API will listen for connections.
+- `KERBEROS_INIT_USERS`: The image can create create users during startup. This environment variable has to be a comma-seperated string of users, with the format "Username=REQUIRED;Password=REQUIRED;Host=OPTIONAL". (example: `KERBEROS_INIT_USERS: "Username=zookeeper;Password=testPassword1;Host=127.0.0.1,Username=admin;Password=adminPassword"`).
+
 
 ## API Endpoints
 **Terms explained**
@@ -34,33 +52,33 @@ In the following examples the host is example.com and the port is 6000.
 **Note** The kerberos API is versioned. So all statuscodes and responses will stay exactly the same for the version that you use.
 
 ### example.com:6000/create-new-user
-This endpoint creates a user. The admin password provided during the container setup is required here.
+This endpoint creates a user. The api key provided during the container setup is required here.
 ##### Example Request (JSON)
 ```
 {
-	"adminPassword": "password",
+	"apiKey": "password",
 	"newUserUsername": "TestUser",
 	"newUserPassword": "TestPassword"
 }
 ```
 ##### Returns one of the following
-- 403: Admin password incorrect
+- 403: API key incorrect
 - 400: User already exists with a keytab
 - 201: User successfully created
 
 ### example.com:6000/create-new-service
-This endpoint creates a service, so a host is required. The admin password provided during the container setup is required here.
+This endpoint creates a service, so a host is required. The api key password provided during the container setup is required here.
 ##### Example Request (JSON)
 ```
 {
-	"adminPassword": "password",
+	"apiKey": "password",
 	"newServiceName": "kafka",
 	"newServicePassword": "kafkaPassword",
 	"newServiceHost": "127.0.0.1"
 }
 ```
 ##### Returns one of the following
-- 403: Admin Password incorrect
+- 403: API key incorrect
 - 400: Service already exists with a keytab
 - 201: Service successfully created
 
@@ -83,21 +101,8 @@ A user and service uses this endpoint to fetch their keytab. The password they w
 }
 ```
 ##### Returns one of the following
-- 400: User does not exist, contact an administrator to get a user and a kerberos keytab
+- 400: User does not exist
 - 200: A file with the content type of "application/octet-stream"
-
-
-# Configuration
-
-- `KERBEROS_ADMIN_PW`: The admin password to use. The admin is able to create users and services with this password, so store it safely! Required.
-
-- `KERBEROS_HOST_DNS`: The DNS-resolvable hostname to use which the kerberos server is identified by. It should be set to the FQDN of the server on which kerberos is running on. Required.
-
-- `KERBEROS_REALM`: The kerberos realm which will be used in keytabs and principals. Required.
-
-- `KERBEROS_API_PORT`: The port on which the API will listen for connections.
-
-- `KERBEROS_POSTGRES_CONNECTION_STRING`: The connection string for a postgres database. This database is crucial in order to save and store all principals and users in case the container restarts.
 
 # Volumes
 

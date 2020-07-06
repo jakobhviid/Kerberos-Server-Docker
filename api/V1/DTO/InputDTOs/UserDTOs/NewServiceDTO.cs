@@ -7,7 +7,7 @@ namespace app_api.V1.DTO.InputDTOs.UserDTOs
     public class NewServiceDTO
     {
         [Required]
-        public string AdminPassword { get; set; }
+        public string APIKey { get; set; }
         [Required]
         public string NewServicePassword { get; set; }
         [Required]

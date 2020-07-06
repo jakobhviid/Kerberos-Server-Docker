@@ -37,6 +37,11 @@ namespace app_api
 
             // adding Database
             var connectionString = Configuration["KERBEROS_POSTGRES_CONNECTION_STRING"];
+            if (connectionString == null)
+            {
+                Console.WriteLine("'KERBEROS_POSTGRES_CONNECTION_STRING' Database Connection string not found");
+                System.Environment.Exit(1);
+            }
             services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
             services.AddScoped<IUserRepo, UserRepo>();
 

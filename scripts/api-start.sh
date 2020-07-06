@@ -4,14 +4,9 @@
 # Prevents errors in a pipeline from being hidden. So if any command fails, that return code will be used as the return code of the whole pipeline
 set -eo pipefail
 
-set -m # bash job control (background, foreground)
+# Starting the kerberos server
+/usr/sbin/krb5kdc -P /var/run/krb5kdc.pid
 
-check-environment.sh
-
-configure-kerberos.sh
-
-api-start.sh &
-
-create-initial-users.sh
-
-fg %1
+PORT=${KERBEROS_API_PORT:-3000}
+# run the server
+dotnet "$API_HOME"/app_api.dll --urls=http://0.0.0.0:$PORT

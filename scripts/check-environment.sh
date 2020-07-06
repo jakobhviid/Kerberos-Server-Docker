@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ -z "$KERBEROS_ADMIN_PW" ]; then
-    echo -e "\e[1;32mERROR - Missing 'KERBEROS_ADMIN_PW' \e[0m"
+if [ -z "$KERBEROS_API_KEY" ]; then
+    echo -e "\e[1;32mERROR - Missing 'KERBEROS_API_KEY' \e[0m"
     exit 1
 fi
 

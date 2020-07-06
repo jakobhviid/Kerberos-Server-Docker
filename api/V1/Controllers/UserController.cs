@@ -30,9 +30,9 @@ namespace app_api.V1.Controllers
         [HttpPost(ApiRoutes.UserRoutes.Register)]
         public async Task<ActionResult> RegisterUser(NewUserDTO input)
         {
-            // Check that admin password is correct to the one supplied in environment files
-            if (!ValidAdmin(input.AdminPassword))
-                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.AdminPasswordInCorrect });
+            // Check that api key is correct to the one supplied in environment files
+            if (!ValidAPIKey(input.APIKey))
+                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.APIKeyInCorrect });
 
             // Check that the username is not already in use in another keytab
             if (await _repo.UserExists(input.NewUserUsername))
@@ -59,10 +59,11 @@ namespace app_api.V1.Controllers
             {
                 input.Username = input.Username + "/" + input.Host;
             }
-            Console.WriteLine(input.Username);
+
             var keyTab = await _repo.GetUserKeyTab(input.Username, input.Password);
             if (keyTab == null)
                 return BadRequest(new GenericReturnMessageDTO { Status = 400, Message = ErrorMessages.UserDoesNotExist });
+
             return new FileContentResult(keyTab, "application/octet-stream")
             {
                 FileDownloadName = input.Username + ".keytab"
@@ -73,10 +74,11 @@ namespace app_api.V1.Controllers
         public async Task<ActionResult> RegisterService(NewServiceDTO input)
         {
             // Check that admin password is correct to the one supplied in environment files
-            if (!ValidAdmin(input.AdminPassword))
-                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.AdminPasswordInCorrect });
+            if (!ValidAPIKey(input.APIKey))
+                return StatusCode(StatusCodes.Status403Forbidden, new GenericReturnMessageDTO { Status = 403, Message = ErrorMessages.APIKeyInCorrect });
 
             var userNameWithHost = input.NewServiceName + "/" + input.NewServiceHost;
+
             // Check that the username is not already in use in another keytab
             if (await _repo.UserExists(userNameWithHost))
                 return BadRequest(new GenericReturnMessageDTO { Status = 400, Message = ErrorMessages.ServiceAlreadyExists });
@@ -95,9 +97,9 @@ namespace app_api.V1.Controllers
             });
         }
 
-        private bool ValidAdmin(string adminPassword)
+        private bool ValidAPIKey(string apiKey)
         {
-            return adminPassword.Equals(_configuration["KERBEROS_ADMIN_PW"]);
+            return apiKey.Equals(_configuration["KERBEROS_API_KEY"]);
         }
 
     }
