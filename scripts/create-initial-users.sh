@@ -32,12 +32,12 @@ if ! [ -z "$KERBEROS_INIT_USERS" ]; then
 
             echo Host - "$host"
 
-            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newServiceName\":\""$username"\", \"newServicePassword\":\""$password"\", \"newServiceHost\":\""$host"\"}" "http://127.0.0.1:"$PORT"/create-new-service")
+            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newServiceName\":\""$username"\", \"newServicePassword\":\""$password"\", \"newServiceHost\":\""$host"\"}" "http://127.0.0.1:"$PORT"/create-new-service" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
                 echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
             fi
         else
-            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newUserUsername\":\""$username"\", \"newUserPassword\":\""$password"\"}" "http://127.0.0.1:"$PORT"/create-new-user")
+            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newUserUsername\":\""$username"\", \"newUserPassword\":\""$password"\"}" "http://127.0.0.1:"$PORT"/create-new-user" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
                 echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
             fi

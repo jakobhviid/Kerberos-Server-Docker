@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace app_api
 {
@@ -35,6 +36,7 @@ namespace app_api
             });
             services.AddControllers();
 
+            Console.ForegroundColor = ConsoleColor.Red;
             // adding Database
             var connectionString = Configuration["KERBEROS_POSTGRES_CONNECTION_STRING"];
             if (connectionString == null)
@@ -42,7 +44,13 @@ namespace app_api
                 Console.WriteLine("'KERBEROS_POSTGRES_CONNECTION_STRING' Database Connection string not found");
                 System.Environment.Exit(1);
             }
-            services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
+            services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString, options => options.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorCodesToAdd: null
+            )));
+            Console.ResetColor();
+
             services.AddScoped<IUserRepo, UserRepo>();
 
             // Auto Mapper Configurations
@@ -59,15 +67,14 @@ namespace app_api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            UpdateDatabase(app);
             if (env.IsDevelopment())
             {
                 Console.WriteLine("Running in development mode");
                 app.UseDeveloperExceptionPage();
             }
-
+            // await UpdateDatabase(app, logger);
             app.UseCors();
             app.UseRouting();
 
@@ -81,7 +88,7 @@ namespace app_api
             await ExistingPrincipalsDatabaseCheck(app);
 
         }
-        private static void UpdateDatabase(IApplicationBuilder app)
+        private async Task UpdateDatabase(IApplicationBuilder app, ILogger<Startup> logger)
         {
             using(var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
@@ -89,7 +96,40 @@ namespace app_api
             {
                 using(var context = serviceScope.ServiceProvider.GetService<DataContext>())
                 {
-                    context.Database.Migrate();
+                    // Npgsql resiliency strategy does not work with Database.EnsureCreated() and Database.Migrate().
+                    // Therefore a retry pattern is implemented for this purpose 
+                    // if database connection is not ready it will retry 3 times before finally quiting
+                    var retryCount = 3;
+                    var currentRetry = 0;
+                    while (true)
+                    {
+                        try
+                        {
+                            logger.LogInformation("Attempting database migration");
+
+                            context.Database.Migrate();
+
+                            logger.LogInformation("Database migration & connection successful");
+
+                            break; // just break if migration is successful
+                        }
+                        catch (Npgsql.NpgsqlException)
+                        {
+                            logger.LogError("Database migration failed. Retrying in 5 seconds ...");
+
+                            currentRetry++;
+
+                            if (currentRetry == retryCount) // Here it is possible to check the type of exception if needed with an OR. And exit if it's a specific exception.
+                            {
+                                // We have tried as many times as retryCount specifies. Now we throw it and exit the application
+                                logger.LogCritical($"Database migration failed after {retryCount} retries");
+                                throw;
+                            }
+
+                        }
+                        // Waiting 5 seconds before trying again
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                    }
                 }
             }
         }
@@ -97,7 +137,7 @@ namespace app_api
         // If the kerberos container is restarted but the user database contains users from a previous build
         // Which isn't reflected by the internal kerberos database, then this method will
         // ensure that the kerberos database contains all the same users the user database contains
-        private async static Task ExistingPrincipalsDatabaseCheck(IApplicationBuilder app)
+        private async Task ExistingPrincipalsDatabaseCheck(IApplicationBuilder app)
         {
             using(var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
@@ -105,6 +145,7 @@ namespace app_api
             {
                 using(var context = serviceScope.ServiceProvider.GetService<DataContext>())
                 {
+                    // Npgsql resiliency strategy works here, so no retry pattern is needed
                     var users = await context.Users.ToListAsync();
                     foreach (var user in users)
                     {
