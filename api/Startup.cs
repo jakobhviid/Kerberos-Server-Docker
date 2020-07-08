@@ -74,7 +74,7 @@ namespace app_api
                 Console.WriteLine("Running in development mode");
                 app.UseDeveloperExceptionPage();
             }
-            // await UpdateDatabase(app, logger);
+            await UpdateDatabase(app, logger);
             app.UseCors();
             app.UseRouting();
 
