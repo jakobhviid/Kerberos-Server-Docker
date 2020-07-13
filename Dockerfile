@@ -21,7 +21,7 @@ ENV API_HOME=/opt/api
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 RUN yum update -y && \
-    yum install -y krb5-server vim && \
+    yum install -y krb5-server vim bind-utils && \
     dnf install aspnetcore-runtime-3.1 -y
 
 COPY --from=build /build/out ${API_HOME}

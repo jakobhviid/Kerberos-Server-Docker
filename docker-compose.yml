@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: kerberos_db
 
   kerberos:
-    image: omvk97/kerberos
+    image: cfei/kerberos
     container_name: kerberos
     ports:
       - 80:80

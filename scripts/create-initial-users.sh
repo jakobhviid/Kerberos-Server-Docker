@@ -17,9 +17,19 @@ if ! [ -z "$KERBEROS_INIT_USERS" ]; then
         IFS=";" # semi colon seperated user arguments (e.g. Username=example;Password=example;Host=optionalExample)
         read -r -a arguments <<<"$user"
         usernameArgument="${arguments[0]}"
+        # Checking that the username argument follows the correct format
+        if ! [[ $usernameArgument == Username=* ]]; then
+            echo -e "\e[1;31mERROR - Creating initial users did not succeed. "$usernameArgument" does not follow the correct format \e[0m"
+            exit 1
+        fi
         username="${usernameArgument:9}" # substring "Username=example" so that the variable becomes "example"
 
         passwordArgument="${arguments[1]}"
+        # Checking that the password argument follows the correct format
+        if ! [[ $passwordArgument == Password=* ]]; then
+            echo -e "\e[1;31mERROR - Creating initial users did not succeed. "$passwordArgument" does not follow the correct format \e[0m"
+            exit 1
+        fi
         password="${passwordArgument:9}" # substring "Password=example" so that the variable becomes "example"
 
         echo Username - "$username"
@@ -28,18 +38,38 @@ if ! [ -z "$KERBEROS_INIT_USERS" ]; then
         if [[ " ${arguments[@]} " =~ "Host" ]]; then # if host is defined
 
             hostArgument="${arguments[2]}"
-            host="${hostArgument:5}" # substring "Username=example" so that the variable becomes "example"
+
+            # Checking that the host argument follows the correct format
+            if ! [[ $hostArgument == Host=* ]]; then
+                echo -e "\e[1;31mERROR - Creating initial users did not succeed. "$hostArgument" does not follow the correct format \e[0m"
+                exit 1
+            fi
+
+            host="${hostArgument:5}" # substring "Host=example" so that the variable becomes "example"
+
+            # If it is a single server setup, we need to resolve ip addresses before adding them as hosts
+            if ! [ -z "$SINGLE_SERVER" ]; then
+
+                # check if the input contains numbers. If they do we cannot DNS resolve it
+                if [[ $host =~ [0-9] ]]; then
+                    echo -e "\e[1;31mERROR - Creating initial users did not succeed. When 'SINGLE_SERVER' is defined all the hosts in initial users has to point to another docker container on the same network \e[0m"
+                    exit 1
+                fi
+                addressString=$(nslookup "$host" | tail -n 2) # gets the ip address of the host ("Address=hostIp")
+                address="${addressString:9}"                  # removing "Address" from addressString
+                host=$address
+            fi
 
             echo Host - "$host"
 
             response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newServiceName\":\""$username"\", \"newServicePassword\":\""$password"\", \"newServiceHost\":\""$host"\"}" "http://127.0.0.1:"$PORT"/create-new-service" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
-                echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
+                echo -e "\e[1;31mERROR - Creating initial user did not succeed. See curl error above \e[0m"
             fi
         else
             response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newUserUsername\":\""$username"\", \"newUserPassword\":\""$password"\"}" "http://127.0.0.1:"$PORT"/create-new-user" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
-                echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
+                echo -e "\e[1;31mERROR - Creating initial user did not succeed. See curl error above \e[0m"
             fi
         fi
     done
