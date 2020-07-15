@@ -5,7 +5,7 @@ The server works by having one api key which has access to create users and serv
 
 # How to use
 This docker-compose file show the deployment of the container
-As can be seen 'network_mode' has been set to "host". This is required for the kerberos server to function properly. This is a mode which only works on linux machines
+As can be seen 'network_mode' has been set to "host". This is required for the kerberos server to function properly. This is a mode which only works on linux hosts.
 
 ```
 version: "3"
