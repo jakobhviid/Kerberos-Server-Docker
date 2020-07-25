@@ -1,14 +1,21 @@
 #!/bin/bash
 
-# Exit if any command has a non-zero exit status (Exists if a command returns an exception, like it's a programming language)
-# Prevents errors in a pipeline from being hidden. So if any command fails, that return code will be used as the return code of the whole pipeline
-set -eo pipefail
-
-PORT=${KERBEROS_API_PORT:-3000}
-
 if ! [ -z "$KERBEROS_INIT_USERS" ]; then
+    PORT=${KERBEROS_API_PORT:-3000}
     echo "INFO - 'KERBEROS_INIT_USERS' has been provided. Creating users. Waiting for API to be ready"
-    sleep 5 # give the server a chance to start up
+    # Wait until the api has started and listens on the port. The max is 15 seconds
+    counter=0
+    while [ -z "$(netstat -tln | grep "$PORT")" ]; do # Listen on localhost open ports and greps PORT
+        if [ "$counter" -eq 15 ]; then         # 15 seconds have passed
+            echo -e "\e[1;32mERROR - Creating initial user did not succeed. Server did not start \e[0m"
+            exit 1
+        else
+            echo "Waiting for API to start ..."
+            sleep 1
+            ((counter++))
+        fi
+    done
+    echo "API has started"
 
     IFS=',' # Comma seperated string of users
     read -r -a users <<<"$KERBEROS_INIT_USERS"
@@ -32,14 +39,14 @@ if ! [ -z "$KERBEROS_INIT_USERS" ]; then
 
             echo Host - "$host"
 
-            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newServiceName\":\""$username"\", \"newServicePassword\":\""$password"\", \"newServiceHost\":\""$host"\"}" "http://127.0.0.1:"$PORT"/create-new-service" || echo "FAIL")
+            response=$(curl --fail --connect-timeout 5 --retry 5 --retry-delay 5 --retry-max-time 30 --retry-connrefused --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newServiceName\":\""$username"\", \"newServicePassword\":\""$password"\", \"newServiceHost\":\""$host"\"}" "http://127.0.0.1:"$PORT"/create-new-service" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
-                echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
+                echo -e "\e[1;32mERROR - Creating initial user did not succeed. See curl error above. \e[0m"
             fi
         else
-            response=$(curl --fail --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newUserUsername\":\""$username"\", \"newUserPassword\":\""$password"\"}" "http://127.0.0.1:"$PORT"/create-new-user" || echo "FAIL")
+            response=$(curl --fail --connect-timeout 5 --retry 5 --retry-delay 5 --retry-max-time 30 --retry-connrefused --max-time 5 -X POST -H "Content-Type: application/json" -d "{\"apiKey\":\""$KERBEROS_API_KEY"\", \"newUserUsername\":\""$username"\", \"newUserPassword\":\""$password"\"}" "http://127.0.0.1:"$PORT"/create-new-user" || echo "FAIL")
             if [ "$response" == "FAIL" ]; then
-                echo -e "\e[1;32mERROR - Creating initial user did not succeed. Most likely error is that users already exist from a previous run \e[0m"
+                echo -e "\e[1;32mERROR - Creating initial user did not succeed. See curl error above. \e[0m"
             fi
         fi
     done

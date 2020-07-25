@@ -39,7 +39,8 @@ services:
 #### Optional environment variables
 
 - `KERBEROS_API_PORT`: The port on which the API will listen for connections.
-- `KERBEROS_INIT_USERS`: The image can create create users during startup. This environment variable has to be a comma-seperated string of users, with the format "Username=REQUIRED;Password=REQUIRED;Host=OPTIONAL". (example: `KERBEROS_INIT_USERS: "Username=zookeeper;Password=testPassword1;Host=127.0.0.1,Username=admin;Password=adminPassword"`).
+
+- `KERBEROS_INIT_USERS`: The image can create users during startup. This environment variable has to be a comma-seperated string of users, with the format "Username=REQUIRED;Password=REQUIRED;Host=OPTIONAL". (example: `KERBEROS_INIT_USERS: "Username=zookeeper;Password=testPassword1;Host=127.0.0.1,Username=admin;Password=adminPassword"`).
 
 
 ## API Endpoints
